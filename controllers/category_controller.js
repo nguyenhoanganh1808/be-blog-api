@@ -4,11 +4,11 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-exports.getAllCategories = (req, res) => {
-  res.json({
-    message: "get all categories",
-  });
-};
+exports.getAllCategories = asyncHandler(async (req, res) => {
+  const allCategoriesList = await prisma.category.findMany();
+
+  res.status(200).json(allCategoriesList);
+});
 
 exports.createCategory = [
   body("name")
