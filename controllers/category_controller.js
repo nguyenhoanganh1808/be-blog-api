@@ -4,6 +4,15 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+const createNameChain = () => {
+  return body("name")
+    .trim()
+    .notEmpty()
+    .withMessage("Name must not be empty")
+    .isAlpha()
+    .withMessage("Name must be in alpha bet");
+};
+
 exports.getAllCategories = asyncHandler(async (req, res) => {
   const allCategoriesList = await prisma.category.findMany();
 
@@ -11,15 +20,9 @@ exports.getAllCategories = asyncHandler(async (req, res) => {
 });
 
 exports.createCategory = [
-  body("name")
-    .trim()
-    .notEmpty()
-    .withMessage("Name must not be empty")
-    .isAlpha()
-    .withMessage("Name must be in alpha bet"),
+  createNameChain(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
-    console.log(req.body);
     const { name } = req.body;
 
     // If have error
@@ -38,9 +41,24 @@ exports.createCategory = [
   }),
 ];
 
-exports.updateCategoryById = (req, res) => {
-  res.send("update category" + req.params.id);
-};
+exports.updateCategoryById = [
+  createNameChain(),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    const { name } = req.body;
+    const id = req.params.id;
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json(errors.array());
+    }
+
+    const newCategory = await prisma.category.update({
+      where: { id: id },
+      data: { name: name },
+    });
+    res.status(200).json(newCategory);
+  }),
+];
 
 exports.deleteCategoryById = (req, res) => {
   res.send("delete category");
